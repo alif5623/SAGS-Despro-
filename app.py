@@ -1,5 +1,7 @@
 from flask import Flask, Response, render_template_string, request
 import cv2
+import paramiko
+import time
 
 app = Flask(__name__)
 
@@ -8,6 +10,31 @@ camera = cv2.VideoCapture(0)
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)  # Width
 camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)  # Height
 
+# SFTP details for uploading the image to Raspberry Pi
+raspberry_ip = "192.168.18.92"  # Replace with your Raspberry Pi's IP address
+raspberry_user = "pi"
+raspberry_password = "raspberry"  # Use a secure method to handle this
+raspberry_remote_path = "/home/pi/images"  # Folder on Raspberry Pi to save images
+
+# Function to upload file to Raspberry Pi via SFTP
+def upload_to_raspberry(filename):
+    try:
+        # Connect to the Raspberry Pi via SFTP
+        transport = paramiko.Transport((raspberry_ip, 22))
+        transport.connect(username=raspberry_user, password=raspberry_password)
+        sftp = paramiko.SFTPClient.from_transport(transport)
+
+        # Upload the file
+        local_path = filename
+        remote_path = f"{raspberry_remote_path}/{filename}"
+        sftp.put(local_path, remote_path)
+
+        sftp.close()
+        transport.close()
+
+        print(f"File {filename} uploaded successfully.")
+    except Exception as e:
+        print(f"Failed to upload {filename}: {e}")
 
 # Function to generate video frames
 def generate_frames():
@@ -36,6 +63,20 @@ def index():
         # Display the message only when the button is clicked
         message = "Manual Open Gate triggered!"
         print(message)  # Log message to the console
+        
+        # Capture and save the frame
+        ret, frame = camera.read()
+        if ret:
+            timestamp = int(time.time())  # Use timestamp for unique filenames
+            filename = f"frame_{timestamp}.jpg"
+            cv2.imwrite(filename, frame)
+            print(f"Saved {filename}")
+            
+            # Upload the image to Raspberry Pi
+            upload_to_raspberry(filename)
+        else:
+            print("Failed to capture frame.")
+
     return render_template_string('''
     <!DOCTYPE html>
     <html lang="en">
