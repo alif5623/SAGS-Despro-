@@ -127,10 +127,14 @@ class RFIDReader:
                     tag = self.parse_tag_notification(full_frame)
                     if tag and self.tag_callback:
                         self.tag_callback(tag)
+                        return True
 
         elif self.serial_port.in_waiting > 0:
             data = self.serial_port.read(self.serial_port.in_waiting)
             print(f"Leftover data: {binascii.hexlify(data)}, length = {len(data)}")
+            return True
+        
+        return False
         
         # print("Exiting read_response loop")
 
@@ -146,22 +150,28 @@ class TagHandler:
 
     def handle_tag(self, tag: RFIDTag):
         """Handle RFID tag detection logic."""
+        tag_flag = False
         try:
             # Extract RFID tag number from TLV data
             rfid_tag_number = binascii.hexlify(tag.tlv_data[0:-2]).decode('utf-8').upper()
+            rfid_tag_number = rfid_tag_number[8:32]
+            self.lookup.cleanup()
             if self.lookup.get(rfid_tag_number):
                 print("Tag already detected")
             else:
                 print(f"RFID tag: {rfid_tag_number}")
                 self.lookup[rfid_tag_number] = rfid_tag_number
+                tag_flag = True
 
             # Reset the reader state
             self.reader.serial_port.cancel_read()
             self.reader.serial_port.reset_input_buffer()
             self.reader.serial_port.reset_output_buffer()
+            return tag_flag
 
         except Exception as e:
             print(f"Error handling tag: {e}")
+            return False
 
 if __name__ == "__main__":
     reader = RFIDReader()

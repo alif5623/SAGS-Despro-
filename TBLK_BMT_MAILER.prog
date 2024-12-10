@@ -1,0 +1,30 @@
+#!/bin/sh
+# Version     Created By      Creation Date             Purpose
+# 1.0         Fateen Najib I  25-July-2024              Initial version for general email program
+# 1.1             Rifky Ramadhana 14-Nov-2024                       CT-40486 : Add double quoute for P_CC_EMAIL and P_TO_EMAIL
+
+echo $@
+UID_PWD=$1
+USER_ID=$2
+REQ_ID=$4
+P_FILE_NAME=$5
+P_TO_EMAIL=$6
+P_CC_EMAIL=$7
+P_SUB_EMAIL=$8
+P_BODY_EMAIL=$9
+
+# Display variables
+echo "Filename :" $P_FILE_NAME
+echo "Email:" $P_TO_EMAIL
+echo "Email CC:" $P_CC_EMAIL
+echo "Subject:" $P_SUB_EMAIL
+echo "Body:" $P_BODY_EMAIL
+
+COPIED_FILE_NAME="${P_FILE_NAME%.*}.csv"
+cp "$APPLCSF/out/${P_FILE_NAME}.out" "$APPLCSF/out/$COPIED_FILE_NAME"
+echo "Copied file to:" "$APPLCSF/out/$COPIED_FILE_NAME"
+
+DD=`date +%d-%^b-%y`
+
+echo -e $P_BODY_EMAIL | mailx -a  $APPLCSF/out/$COPIED_FILE_NAME  -s "$P_SUB_EMAIL" -c "$P_CC_EMAIL" "$P_TO_EMAIL";
+

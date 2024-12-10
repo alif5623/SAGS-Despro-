@@ -13,7 +13,7 @@ camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)  # Width
 camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)  # Height
 
 # Upload URL (Raspberry Pi)
-UPLOAD_URL = "http://10.15.20.9:5000/upload"  # Replace with actual Raspberry Pi IP
+UPLOAD_URL = "http://10.15.20.11:5000/upload"  # Replace with actual Raspberry Pi IP
 FRAME_PATH = "frame.jpg"  # Temporary storage for the captured frame
 
 
